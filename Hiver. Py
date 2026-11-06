@@ -1,0 +1,21 @@
+hiver=["decembre","janvier","fevrier"]
+printemps=["mars","avril","mai"]
+ete=["juin","juillet","août"]
+automne=["septembre","octobre","novembre"]
+saisons=[hiver,printemps,ete,automne,]
+print(f"les mois de l'hiver sont {hiver}")
+print(f"les mois du printemps sont {printemps}")
+print(f"les mois de l'ete sont {ete}")
+print(f"les mois de l'automne sont {automne}")
+print(saisons[2])
+print(saisons[1][0])
+print(saisons[1:2])
+print(saisons[:][1])
+print(list(range(0,1000,9)))
+print(len(list(range(2,1001,2))))
+for mis in ete:
+    print(mis*2)
+print ("c'est fini")
+for i,  mois in enumerate(hiver):
+    print(f"le mois {i} est {mois}")
+len(ete)
