@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Crypto Wallet</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .wallet-container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Section Solde */
+        .balance-card {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .balance-label {
+            color: #93c5fd;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        /* Section Actions (Formulaire) */
+        .actions-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-deposit { background-color: var(--success); }
+        .btn-withdraw { background-color: var(--danger); }
+
+        /* Section Historique */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-header h2 {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .btn-clear {
+            background: none;
+            color: var(--danger);
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            cursor: pointer;
+            width: auto;
+            flex: none;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            list-style: none;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #334155;
+            font-size: 0.95rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .type-deposit { color: var(--success); font-weight: 600; }
+        .type-withdraw { color: var(--danger); font-weight: 600; }
+        .date-text { font-size: 0.8rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="wallet-container">
+        <div class="header">
+            <h1>Mon Digital Wallet 💳</h1>
+        </div>
+
+        <!-- Zone du Solde -->
+        <div class="balance-card">
+            <div class="balance-label">Solde Actuel</div>
+            <div class="balance-amount" id="balance">0.00 €</div>
+        </div>
+
+        <!-- Formulaire de Dépôt / Retrait -->
+        <div class="actions-card">
+            <div class="input-group">
+                <input type="number" id="amount" placeholder="Entrez un montant (€)" min="0.01" step="0.01">
+            </div>
+            <div class="btn-group">
+                <button class="btn-deposit" onclick="handleTransaction('deposit')">Dépôt</button>
+                <button class="btn-withdraw" onclick="handleTransaction('withdraw')">Retrait</button>
+            </div>
+        </div>
+
+        <!-- Section Historique -->
+        <div class="history-section">
+            <div class="history-header">
+                <h2>Historique des transactions</h2>
+                <button class="btn-clear" onclick="clearHistory()">Effacer</button>
+            </div>
+            <ul class="history-list" id="historyList">
+                <!-- Rempli dynamiquement -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Récupération des données sauvegardées ou valeurs par défaut
+        let currentBalance = parseFloat(localStorage.getItem('walletBalance')) || 1000.00;
+        let transactions = JSON.parse(localStorage.getItem('walletTransactions')) || [];
+        
+        const balanceElement = document.getElementById('balance');
+        const historyList = document.getElementById('historyList');
+        const amountInput = document.getElementById('amount');
+
+        // Met à jour l'affichage du solde
+        function updateBalanceDisplay() {
+            balanceElement.innerText = currentBalance.toFixed(2) + ' €';
+        }
+
+        // Affiche l'historique complet depuis la mémoire
+        function renderHistory() {
+            historyList.innerHTML = '';
+            transactions.forEach(tx => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                const className = tx.type === 'Dépôt' ? 'type-deposit' : 'type-withdraw';
+                const prefix = tx.type === 'Dépôt' ? '+' : '-';
+                
+                li.innerHTML = `
+                    <div>
+                        <span class="${className}">${tx.type}</span>
+                        <div class="date-text">${tx.date}</div>
+                    </div>
+                    <div class="${className}">${prefix}${tx.amount.toFixed(2)} €</div>
+                `;
+                historyList.appendChild(li); // Les nouveaux éléments sont ajoutés au début du tableau dans handleTransaction
+            });
+        }
+
+        // Gère les clics sur Dépôt ou Retrait
+        function handleTransaction(type) {
+            const amount = parseFloat(amountInput.value);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Veuillez entrer un montant valide supérieur à 0.");
+                return;
+            }
+
+            if (type === 'withdraw' && amount > currentBalance) {
+                alert("Solde insuffisant pour effectuer ce retrait !");
+                return;
+            }
+
+            let typeText = '';
+            if (type === 'deposit') {
+                currentBalance += amount;
+                typeText = 'Dépôt';
+            } else if (type === 'withdraw') {
+                currentBalance -= amount;
+                typeText = 'Retrait';
+            }
+
+            // Génération de la date
+            const now = new Date();
+            const timeString = now.toLocaleDateString() + ' à ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            // Sauvegarde dans le tableau au début (index 0)
+            transactions.unshift({
+                type: typeText,
+                amount: amount,
+                date: timeString
+            });
+
+            // Sauvegarde locale persistante
+            localStorage.setItem('walletBalance', currentBalance.toString());
+            localStorage.setItem('walletTransactions', JSON.stringify(transactions));
+
+            // Actualisation de l'interface
+            updateBalanceDisplay();
+            renderHistory();
+            amountInput.value = '';
+        }
+
+        // Effacer tout l'historique et remettre à zéro
+        function clearHistory() {
+            if(confirm("Voulez-vous vraiment effacer l'historique et réinitialiser le solde à 1000 € ?")) {
+                currentBalance = 1000.00;
+                transactions = [];
+                localStorage.removeItem('walletBalance');
+                localStorage.removeItem('walletTransactions');
+                updateBalanceDisplay();
+                renderHistory();
+            }
+        }
+
+        // Chargement initial des données
+        updateBalanceDisplay();
+        renderHistory();
+    </script>
+</body>
+</html>
